@@ -18,8 +18,10 @@ MANCHESTER.SetTxPin(trx);
 }
 
 void loop() {
+//Temp lesen und in int umwandeln
 float a=tiny.readTemp()*100.0;
 int b =(int)a; 
+//Druck lesen und aus 32 bit in 2 16 bit int machen für besseres senden 
 uint32_t c=tiny.readPressure();
 uint16_t Low=c;
 uint16_t High=c>>16;
