@@ -1,19 +1,19 @@
-//#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h> //Für debugging
 #include <MANCHESTER.h>
 #include <TinyWireM.h>
 #include <USI_TWI_Master.h>
 #include <tinybmp.h>
 
-//const int rx=3;
-//const int tx=4;
+//const int rx=3; //Für debugging
+//const int tx=4;//Für debugging
 const int trx=1;
 
 tinybmp180 tiny;
-//SoftwareSerial ser(rx,tx);
+//SoftwareSerial ser(rx,tx);//Für debugging
 void setup() {
   // put your setup code here, to run once:
 tiny.begin();
-//ser.begin(9600);
+//ser.begin(9600);//Für debugging
 MANCHESTER.SetTxPin(trx);
 }
 
@@ -23,9 +23,9 @@ int b =(int)a;
 uint32_t c=tiny.readPressure();
 uint16_t Low=c;
 uint16_t High=c>>16;
-//uint32_t temp=High;
-//temp<<=16;
-//temp|=Low;
+//uint32_t temp=High;//Für debugging
+//temp<<=16;          //Für debugging
+//temp|=Low;//Für debugging
   // put your main code here, to run repeatedly:
   MANCHESTER.Transmit(b);
   delay(20);
@@ -33,11 +33,11 @@ uint16_t High=c>>16;
   delay(20);
   MANCHESTER.Transmit(High);
   delay(20);
-  //ser.println(tiny.readPressure());
-  //ser.println(Low);
-  //ser.println(High);
-  //ser.println(temp);
-  //ser.println("###############");
-  //MANCHESTER.Transmit(tiny.readPressure());
+  //ser.println(tiny.readPressure()); //Für debugging
+  //ser.println(Low); //Für debugging 
+  //ser.println(High); //Für debugging
+  //ser.println(temp); //Für debugging
+  //ser.println("###############"); //Für debugging
+  //MANCHESTER.Transmit(tiny.readPressure()); //Für debugging
 delay(500);
 }
