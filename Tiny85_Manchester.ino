@@ -25,7 +25,8 @@
       (3) PA7-|    |- PA4/SCL (6)
   (4) SDA/PA6-|____|- PA5 (5)
 
-  
+  ~70mA ohne sleep
+  ~45uA schlafend
 */
 //Variablen deklarieren
 #define mt 7
@@ -33,7 +34,7 @@
 float Temp;
 uint32_t Pres;
 uint16_t pLow,pHigh;
-uint8_t lLow,hLow,lHigh,hHigh;
+uint8_t lLow,hLow,lHigh,hHigh,watchdog_counter=0;
 uint8_t a[BUFFER_SIZE];
 //bmp klasse initialisieren
 tinybmp180 tiny;
@@ -42,12 +43,13 @@ tinybmp180 tiny;
 ISR(WDT_vect){
   //erstmal leer weil, muss nur da sein damit der watchdog funktioniert
   //für jeden interrupt auch eine ISR
+  watchdog_counter++;
 }
 
 void setup() {
   //Sensor und Transmitter initialisieren
 tiny.begin();
-man.setupTransmit(mt, MAN_1200);
+man.setupTransmit(mt, MAN_300);
   //sleep modes initialisieren
 set_sleep_mode(SLEEP_MODE_PWR_DOWN);//nicht das beste zum stromsparen, aber ein anfang
 sleep_enable();
@@ -60,37 +62,40 @@ union u_tag {
  } u;
 void loop() {
   //erstmal schlafen
-//ADCSRA &= ~(1<<ADEN); ADC aussschalten um strom zu sparen, erstmal nicht
-setup_watchdog(5);  // watchdog geht nach 500ms los
+ADCSRA &= ~(1<<ADEN); //ADC aussschalten um strom zu sparen, erstmal nicht
+setup_watchdog(6);  // watchdog geht nach 500ms los
 sleep_mode();       // erstmal schlafen, nach 500ms aufwachen
-//ADCSRA |= (1<<ADEN); ADC wieder einschalten
-                    // danach muss die erste messen verworfen werden
+ADCSRA |= (1<<ADEN); //ADC wieder einschalten
+                    // danach muss die erste messung verworfen werden
 
-
+  if(watchdog_counter >30){
+    //30 sekunden schlafen, danach timer wieder auf 0 stelllen um wieder 30 sekunden zu schlafen
+    watchdog_counter=0;
   //Werte aus dem Sensor auslesen
-Temp=tiny.readTemp();
-Pres=tiny.readPressure();
+    Temp=tiny.readTemp();
+    Pres=tiny.readPressure();
 //Temperatur and Union für float to byte(4) übergeben
-u.fval=Temp;
+    u.fval=Temp;
 //Luftdruck in 4 ( Bit werte aufteilen
-pLow=Pres;
-pHigh=Pres>>16;
-lLow=pLow;
-hLow=pLow>>8&0xFF;
-lHigh=pHigh;
-hHigh=pHigh>>8&0xFF;
-//Array befüllen:
-a[0]=255;
-a[1]=u.b[0];
-a[2]=u.b[1];
-a[3]=u.b[2];
-a[4]=u.b[3];
-a[5]=lLow;
-a[6]=hLow;
-a[7]=lHigh;
-a[8]=hHigh;
-//Array versenden
-man.transmitArray(9,a);
+    pLow=Pres;
+    pHigh=Pres>>16;
+    lLow=pLow;
+    hLow=pLow>>8&0xFF;
+    lHigh=pHigh;
+    hHigh=pHigh>>8&0xFF;
+    //Array befüllen:
+    a[0]=255;
+    a[1]=u.b[0];
+    a[2]=u.b[1];
+    a[3]=u.b[2];
+    a[4]=u.b[3];
+    a[5]=lLow;
+    a[6]=hLow;
+    a[7]=lHigh;
+    a[8]=hHigh;
+    //Array versenden
+    man.transmitArray(9,a);
+  }
 }
 //Sets the watchdog timer to wake us up, but not reset
 //0=16ms, 1=32ms, 2=64ms, 3=128ms, 4=250ms, 5=500ms
