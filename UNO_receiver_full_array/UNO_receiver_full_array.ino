@@ -16,7 +16,7 @@ void setup() {
   //Transmitter initialisieren
 Serial.begin(9600);
 Serial.println("Starte Empfang");
-man.setupReceive(RX_PIN, MAN_1200);
+man.setupReceive(RX_PIN, MAN_300);
 man.beginReceiveArray(BUFFER_SIZE,data);
 }
 
